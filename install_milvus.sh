@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# For Milvus 0.6.0 CPU-version only 
+
 if [ $# -eq 1 ];then
 	dir_location=$1
 	milvus_tag=0.6.0-cpu-d120719-2b40dd
@@ -47,8 +49,14 @@ mkdir -p ${dir_location}/conf
 mkdir -p ${dir_location}/logs
 
 mkdir -p /home/$USER/milvus/conf
+
+# CPU version config files
 wget https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/server_config.yaml
 wget https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/log_config.conf
+
+# GPU version config files
+# wget https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/server_config.yaml
+# wget https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/log_config.conf
 
 docker run -d --name milvus_cpu \
     -e "TZ=Asia/Shanghai" -p 19530:19530 \
@@ -56,3 +64,19 @@ docker run -d --name milvus_cpu \
     -v /home/$USER/milvus/db:/var/lib/milvus/db \
     -v /home/$USER/milvus/conf:/var/lib/milvus/conf \
     -v /home/$USER/milvus/logs:/var/lib/milvus/logs milvusdb/milvus:cpu-latest
+
+IS_RUN=$(docker ps | grep ${milvus_image_id} | wc -l)
+TRY_CNT=0
+while [ $IS_RUN -eq 0 ];do
+	sleep 1
+	IS_RUN=$(docker ps | grep ${milvus_image_id} | wc -l)
+	if [ $TRY_CNT -ge 60 ];then
+		echo "Error: Failed to start Milvus. Please check the logs."
+		exit -1
+	fi
+	TRY_CNT=$[$TRY_CNT + 1]
+done
+
+echo "State: Successfuly started !"
+
+container_id=$(docker ps |grep ${milvus_image_id} |awk '{printf "%s\n",$1}')
