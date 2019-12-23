@@ -14,7 +14,7 @@ else
 fi
 
 if [ -d ${dir_location} ];then
-	echo "Error: file /home/$USER/milvus already exists, please try again."
+	echo "Error: The specified location already exists, please try again."
   	exit 0
 fi
 
@@ -33,7 +33,7 @@ else
     exit -1
 fi
 
-milvus_image_id=$(docker images |grep "milvusdb/milvus" | grep "$milvustag" \
+milvus_image_id=$(docker images |grep "milvusdb/milvus" | grep "$milvus_tag" \
  |awk '{printf "%s\n",$3}')
 echo "milvus_image_id:" $milvus_image_id
 
@@ -48,22 +48,30 @@ mkdir -p ${dir_location}/db
 mkdir -p ${dir_location}/conf
 mkdir -p ${dir_location}/logs
 
-mkdir -p /home/$USER/milvus/conf
+DOWNLOAD_CNT=0
+while [! -f ${dir_location}/conf/server_config.yaml | -f ${dir_location}/conf/log_config.yaml];do
+    sleep 2
+    # CPU version config files
+    wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/server_config.yaml
+    wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/log_config.conf
 
-# CPU version config files
-wget https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/server_config.yaml
-wget https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/log_config.conf
-
-# GPU version config files
-# wget https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/server_config.yaml
-# wget https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/log_config.conf
+    # GPU version config files
+    # wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/server_config.yaml
+    # wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/log_config.conf
+    if [DOWNLOAD_CNT -ge 20];then
+        echo "Cannot connect to GitHub to get the config files. Please check your network connection."
+        exit -1
+    fi
+    DOWNLOAD_CNT=$[$DOWNLOAD_CNT + 1]
+done
 
 docker run -d --name milvus_cpu \
     -e "TZ=Asia/Shanghai" -p 19530:19530 \
     -p 8080:8080 \
-    -v /home/$USER/milvus/db:/var/lib/milvus/db \
-    -v /home/$USER/milvus/conf:/var/lib/milvus/conf \
-    -v /home/$USER/milvus/logs:/var/lib/milvus/logs milvusdb/milvus:cpu-latest
+    -v ${dir_location}/db:/var/lib/milvus/db \
+    -v ${dir_location}/conf:/var/lib/milvus/conf \
+    -v ${dir_location}/logs:/var/lib/milvus/logs milvusdb/milvus:$milvus_tag
+    
 
 IS_RUN=$(docker ps | grep ${milvus_image_id} | wc -l)
 TRY_CNT=0
@@ -77,6 +85,9 @@ while [ $IS_RUN -eq 0 ];do
 	TRY_CNT=$[$TRY_CNT + 1]
 done
 
-echo "State: Successfuly started !"
+echo "State: Successfuly started Milvus!"
 
 container_id=$(docker ps |grep ${milvus_image_id} |awk '{printf "%s\n",$1}')
+
+logs=$(docker logs $container_id)
+echo "mMilvus docker logs:" $logs
