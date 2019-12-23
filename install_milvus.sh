@@ -48,21 +48,21 @@ mkdir -p ${dir_location}/db
 mkdir -p ${dir_location}/conf
 mkdir -p ${dir_location}/logs
 
-DOWNLOAD_CNT_1=0
-DOWNLOAD_CNT_2=0
+DOWNLOAD_CNT_LOG=0
+DOWNLOAD_CNT_CONF=0
 
-while [ ! -f ${dir_location}/conf/log_config.yaml ];do
+while [ ! -f ${dir_location}/conf/log_config.conf ];do
     sleep 2
     # CPU version config file
     wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/log_config.conf
 
     # GPU version config file
     # wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/log_config.conf
-    if [ DOWNLOAD_CNT_1 -ge 20 ];then
+    if [ $DOWNLOAD_CNT_LOG -ge 20 ];then
         echo "Cannot connect to GitHub to get the config files. Please check your network connection."
         exit -1
     fi
-    DOWNLOAD_CNT_1=$[$DOWNLOAD_CNT_1 + 1]
+    DOWNLOAD_CNT_LOG=$[$DOWNLOAD_CNT_LOG + 1]
 done
 
 while [ ! -f ${dir_location}/conf/server_config.yaml ];do
@@ -72,11 +72,11 @@ while [ ! -f ${dir_location}/conf/server_config.yaml ];do
 
     # GPU version config file
     # wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/server_config.yaml
-    if [ DOWNLOAD_CNT_2 -ge 20 ];then
+    if [ $DOWNLOAD_CNT_CONF -ge 20 ];then
         echo "Cannot connect to GitHub to get the config files. Please check your network connection."
         exit -1
     fi
-    DOWNLOAD_CNT_2=$[$DOWNLOAD_CNT_2 + 1]
+    DOWNLOAD_CNT_CONF=$[$DOWNLOAD_CNT_CONF + 1]
 done
 
 docker run -d --name milvus_cpu \
