@@ -7,7 +7,7 @@ if [ $# -eq 1 ];then
 	milvus_tag=0.6.0-cpu-d120719-2b40dd
 elif [ $# -eq 2 ];then
 	dir_location=$1
-	megawise_tag=$2
+	milvus_tag=$2
 else
 	echo "Error: please use install_milvus.sh [path(required)] [milvus_tag(optional)] to run."
 	exit -1
@@ -33,7 +33,7 @@ else
     exit -1
 fi
 
-milvus_image_id=$(docker images |grep "milvusdb/milvus" | grep "$megawise_tag" \
+milvus_image_id=$(docker images |grep "milvusdb/milvus" | grep "$milvustag" \
  |awk '{printf "%s\n",$3}')
 echo "milvus_image_id:" $milvus_image_id
 
