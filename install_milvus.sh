@@ -49,7 +49,9 @@ mkdir -p ${dir_location}/conf
 mkdir -p ${dir_location}/logs
 
 DOWNLOAD_CNT=0
-while [! -f ${dir_location}/conf/server_config.yaml || ! -f ${dir_location}/conf/log_config.yaml];do
+SERVER_CONFIG=${dir_location}/conf/server_config.yaml
+LOG_CONFIG=${dir_location}/conf/log_config.yaml
+while [! -f "$SERVER_CONFIG" || ! -f "$LOG_CONFIG"];do
     sleep 2
     # CPU version config files
     wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/server_config.yaml
