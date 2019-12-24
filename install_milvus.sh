@@ -102,7 +102,7 @@ while [ $IS_RUN -eq 0 ];do
 	IS_RUN=$(docker ps | grep ${milvus_container_id} | wc -l)
 	if [ $TRY_CNT -ge 60 ];then
 		echo "Error: Failed to start Milvus. Please check the logs."
-        logs=$(docker logs ${milvus_container_id} | awk '{printf "\n" $0}') 
+        docker logs ${milvus_container_id} | awk '{printf "\n" $0}'
         echo "Milvus docker logs:" ${logs}
 		exit -1
 	fi
@@ -111,5 +111,4 @@ done
 
 echo "State: Successfuly started Milvus!"
 
-logs=$(docker logs ${milvus_container_id} | awk '{printf "\n" $0}')
-echo "Milvus docker logs:" ${logs}
+docker logs ${milvus_container_id} | awk '{printf "\n" $0}'
