@@ -1,6 +1,10 @@
 #!/bin/bash
 
 # For Milvus 0.6.0 CPU-version only 
+# Docker version 19.03.5
+
+# How to use
+# $ ./install_milvus.sh [$INSTALL_PATH] [$IMAGE_TAG (optional)]
 
 if [ $# -eq 1 ];then
 	dir_location=$1
@@ -9,7 +13,7 @@ elif [ $# -eq 2 ];then
 	dir_location=$1
 	milvus_tag=$2
 else
-	echo "Error: please use install_milvus.sh [path(required)] [milvus_tag(optional)] to run."
+	echo "Error: please use $ ./install_milvus.sh [\$INSTALL_PATH] [\$IMAGE_TAG (optional)] to run."
 	exit -1
 fi
 
@@ -53,12 +57,10 @@ DOWNLOAD_CNT_CONF=0
 
 while [ ! -f ${dir_location}/conf/log_config.conf ];do
     sleep 2
-    # CPU version config file
+    # CPU/GPU  version config file
     wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/log_config.conf
 
-    # GPU version config file
-    # wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/log_config.conf
-    if [ $DOWNLOAD_CNT_LOG -ge 20 ];then
+    if [ $DOWNLOAD_CNT_LOG -ge 30 ];then
         echo "Cannot connect to GitHub to get the config files. Please check your network connection."
         exit -1
     fi
@@ -67,12 +69,16 @@ done
 
 while [ ! -f ${dir_location}/conf/server_config.yaml ];do
     sleep 2
-    # CPU version config file
-    wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/server_config.yaml
 
-    # GPU version config file
-    # wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/server_config.yaml
-    if [ $DOWNLOAD_CNT_CONF -ge 20 ];then
+    if [[ $milvus_tag == *"cpu"* ]]; then
+        # CPU version config file
+        wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/server_config.yaml
+    else
+        # GPU version config file
+        wget -P ${dir_location}/conf https://raw.githubusercontent.com/milvus-io/docs/0.6.0/assets/config/server_config.yaml
+    fi
+
+    if [ $DOWNLOAD_CNT_CONF -ge 30 ];then
         echo "Cannot connect to GitHub to get the config files. Please check your network connection."
         exit -1
     fi
@@ -96,7 +102,7 @@ while [ $IS_RUN -eq 0 ];do
 	IS_RUN=$(docker ps | grep ${milvus_container_id} | wc -l)
 	if [ $TRY_CNT -ge 60 ];then
 		echo "Error: Failed to start Milvus. Please check the logs."
-        logs=$(docker logs ${milvus_container_id} | awk '{printf "%s\n",$0}')
+        logs=$(docker logs ${milvus_container_id} | awk '{printf "\n" $0}') 
         echo "Milvus docker logs:" ${logs}
 		exit -1
 	fi
@@ -105,5 +111,5 @@ done
 
 echo "State: Successfuly started Milvus!"
 
-logs=$(docker logs ${milvus_container_id} | awk '{printf "%s\n",$0}')
+logs=$(docker logs ${milvus_container_id} | awk '{printf "\n" $0}')
 echo "Milvus docker logs:" ${logs}
