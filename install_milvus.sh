@@ -85,12 +85,26 @@ while [ ! -f ${dir_location}/conf/server_config.yaml ];do
     DOWNLOAD_CNT_CONF=$[$DOWNLOAD_CNT_CONF + 1]
 done
 
-docker run -d --name milvus_cpu \
+# Use this command if the image is CPU-only Milvus
+if [[ $milvus_tag == *"cpu"* ]]; then
+    docker run -d --name milvus_cpu \
     -e "TZ=Asia/Shanghai" -p 19530:19530 \
     -p 8080:8080 \
     -v ${dir_location}/db:/var/lib/milvus/db \
     -v ${dir_location}/conf:/var/lib/milvus/conf \
     -v ${dir_location}/logs:/var/lib/milvus/logs milvusdb/milvus:$milvus_tag
+    
+# Use this command if the image is GPU-supported Milvus
+else
+    docker run -d --name milvus_gpu \
+    -e "TZ=Asia/Shanghai" -p 19530:19530 \
+    -p 8080:8080 \
+    -v ${dir_location}/db:/var/lib/milvus/db \
+    -v ${dir_location}/conf:/var/lib/milvus/conf \
+    -v ${dir_location}/logs:/var/lib/milvus/logs milvusdb/milvus:$milvus_tag
+fi
+
+
     
 milvus_container_id=$(docker ps |grep ${milvus_tag} |awk '{printf "%s\n",$1}')
 echo "Milvus container ID: " ${milvus_container_id}
@@ -109,6 +123,6 @@ while [ $IS_RUN -eq 0 ];do
 	TRY_CNT=$[$TRY_CNT + 1]
 done
 
-echo "State: Successfuly started Milvus!"
+echo "State: Successfully started Milvus!"
 
 docker logs ${milvus_container_id} | awk '{printf "\n" $0}'
