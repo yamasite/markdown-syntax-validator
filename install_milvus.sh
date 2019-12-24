@@ -33,11 +33,11 @@ else
     exit -1
 fi
 
-milvus_image_id=$(docker images |grep "milvusdb/milvus" | grep "$milvus_tag" \
+milvus_image_id=$(docker images | grep "$milvus_tag" \
  |awk '{printf "%s\n",$3}')
 echo "milvus_image_id:" $milvus_image_id
 
-MILVUS_CNT=$(docker ps | grep $milvus_image_id | wc -l)
+MILVUS_CNT=$(docker ps | grep $milvus_tag | wc -l)
 
 if [ $MILVUS_CNT -ne 0 ];then
 	echo "An instance of Milvus is already running..."
@@ -86,17 +86,17 @@ docker run -d --name milvus_cpu \
     -v ${dir_location}/conf:/var/lib/milvus/conf \
     -v ${dir_location}/logs:/var/lib/milvus/logs milvusdb/milvus:$milvus_tag
     
-container_id=$(docker ps |grep ${milvus_image_id} |awk '{printf "%s\n",$1}')
-echo "Milvus container ID: " ${container_id}
+milvus_container_id=$(docker ps |grep ${milvus_tag} |awk '{printf "%s\n",$1}')
+echo "Milvus container ID: " ${milvus_container_id}
 
-IS_RUN=$(docker ps | grep ${milvus_image_id} | wc -l)
+IS_RUN=$(docker ps | grep ${milvus_container_id} | wc -l)
 TRY_CNT=0
 while [ $IS_RUN -eq 0 ];do
 	sleep 1
-	IS_RUN=$(docker ps | grep ${milvus_image_id} | wc -l)
+	IS_RUN=$(docker ps | grep ${milvus_container_id} | wc -l)
 	if [ $TRY_CNT -ge 60 ];then
 		echo "Error: Failed to start Milvus. Please check the logs."
-        logs=$(docker logs | grep ${container_id} | awk '{printf "%s\n",$1}')
+        logs=$(docker logs ${milvus_container_id} | awk '{printf "%s\n",$0}')
         echo "Milvus docker logs:" ${logs}
 		exit -1
 	fi
@@ -105,5 +105,5 @@ done
 
 echo "State: Successfuly started Milvus!"
 
-logs=$(docker logs | grep ${container_id} | awk '{printf "%s\n",$1}')
+logs=$(docker logs ${milvus_container_id} | awk '{printf "%s\n",$0}')
 echo "Milvus docker logs:" ${logs}
