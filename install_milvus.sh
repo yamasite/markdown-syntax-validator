@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# For Milvus 0.6.0 CPU-version only 
+# For Milvus 0.6.0 CPU-version and GPU-version 
 # Docker version 19.03.5
 
 # How to use
@@ -96,14 +96,13 @@ if [[ $milvus_tag == *"cpu"* ]]; then
     
 # Use this command if the image is GPU-supported Milvus
 else
-    docker run -d --name milvus_gpu \
+    docker run -d --name milvus_gpu --gpus all \
     -e "TZ=Asia/Shanghai" -p 19530:19530 \
     -p 8080:8080 \
     -v ${dir_location}/db:/var/lib/milvus/db \
     -v ${dir_location}/conf:/var/lib/milvus/conf \
     -v ${dir_location}/logs:/var/lib/milvus/logs milvusdb/milvus:$milvus_tag
 fi
-
 
     
 milvus_container_id=$(docker ps |grep ${milvus_tag} |awk '{printf "%s\n",$1}')
