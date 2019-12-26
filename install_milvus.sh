@@ -88,20 +88,22 @@ done
 # Use this command if the image is CPU-only Milvus
 if [[ $milvus_tag == *"cpu"* ]]; then
     docker run -d --name milvus_cpu \
-    -e "TZ=Asia/Shanghai" -p 19530:19530 \
+    -p 19530:19530 \
     -p 8080:8080 \
     -v ${dir_location}/db:/var/lib/milvus/db \
     -v ${dir_location}/conf:/var/lib/milvus/conf \
-    -v ${dir_location}/logs:/var/lib/milvus/logs milvusdb/milvus:$milvus_tag
+    -v ${dir_location}/logs:/var/lib/milvus/logs \
+    milvusdb/milvus:$milvus_tag
     
 # Use this command if the image is GPU-supported Milvus
 else
     docker run -d --name milvus_gpu --gpus all \
-    -e "TZ=Asia/Shanghai" -p 19530:19530 \
+    -p 19530:19530 \
     -p 8080:8080 \
     -v ${dir_location}/db:/var/lib/milvus/db \
     -v ${dir_location}/conf:/var/lib/milvus/conf \
-    -v ${dir_location}/logs:/var/lib/milvus/logs milvusdb/milvus:$milvus_tag
+    -v ${dir_location}/logs:/var/lib/milvus/logs \
+    milvusdb/milvus:$milvus_tag
 fi
 
     
